@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import App from "./App";
-import Admin from "./Admin";
+import Admin from "./Admin.jsx";
 
 import "./App.css";
 
