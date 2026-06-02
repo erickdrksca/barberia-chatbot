@@ -73,7 +73,7 @@ export default function App() {
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
 
-  function generarHorarios() {
+  async function generarHorarios() {
     if (!servicioId || !fecha) {
       setHorarios([]);
       return;
@@ -93,6 +93,16 @@ export default function App() {
     const comidaInicio = convertirMinutos("14:00");
     const comidaFin = convertirMinutos("15:00");
 
+    const { data: citasExistentes } = await supabase
+      .from("citas")
+      .select("hora_inicio")
+      .eq("fecha", fecha);
+
+    const horasOcupadas =
+      citasExistentes?.map((c) =>
+        c.hora_inicio.substring(0, 5)
+      ) || [];
+
     const lista = [];
 
     for (
@@ -106,9 +116,14 @@ export default function App() {
         inicio < comidaFin &&
         fin > comidaInicio;
 
-      if (!cruzaComida) {
+      const horaTexto = convertirHora(inicio);
+
+      const ocupado =
+        horasOcupadas.includes(horaTexto);
+
+      if (!cruzaComida && !ocupado) {
         lista.push({
-          inicio: convertirHora(inicio),
+          inicio: horaTexto,
           fin: convertirHora(fin),
         });
       }
@@ -127,6 +142,19 @@ export default function App() {
       !telefono
     ) {
       alert("Completa todos los campos");
+      return;
+    }
+
+    const { data: citaExistente } =
+      await supabase
+        .from("citas")
+        .select("id")
+        .eq("fecha", fecha)
+        .eq("hora_inicio", horario)
+        .maybeSingle();
+
+    if (citaExistente) {
+      alert("⚠️ Ese horario ya fue reservado");
       return;
     }
 
@@ -198,6 +226,7 @@ export default function App() {
     }
 
     await cargarCitas();
+    await generarHorarios();
 
     alert("✅ Cita reservada correctamente");
 
@@ -322,15 +351,9 @@ export default function App() {
               <tr key={cita.id}>
                 <td>{cita.fecha}</td>
                 <td>{cita.hora_inicio}</td>
-                <td>
-                  {cita.clientes?.nombre}
-                </td>
-                <td>
-                  {cita.clientes?.telefono}
-                </td>
-                <td>
-                  {cita.servicios?.nombre}
-                </td>
+                <td>{cita.clientes?.nombre}</td>
+                <td>{cita.clientes?.telefono}</td>
+                <td>{cita.servicios?.nombre}</td>
                 <td>{cita.estado}</td>
               </tr>
             ))}
