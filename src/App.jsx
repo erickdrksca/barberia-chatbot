@@ -3,15 +3,19 @@ import { supabase } from "./lib/supabase";
 
 export default function App() {
   const [servicios, setServicios] = useState([]);
+  const [citas, setCitas] = useState([]);
+
   const [servicioId, setServicioId] = useState("");
   const [fecha, setFecha] = useState("");
   const [horario, setHorario] = useState("");
   const [horarios, setHorarios] = useState([]);
+
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
 
   useEffect(() => {
     cargarServicios();
+    cargarCitas();
   }, []);
 
   useEffect(() => {
@@ -33,6 +37,30 @@ export default function App() {
     setServicios(data);
   }
 
+  async function cargarCitas() {
+    const { data, error } = await supabase
+      .from("citas")
+      .select(`
+        *,
+        clientes (
+          nombre,
+          telefono
+        ),
+        servicios (
+          nombre,
+          precio
+        )
+      `)
+      .order("fecha", { ascending: true });
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    setCitas(data);
+  }
+
   function convertirMinutos(hora) {
     const [h, m] = hora.split(":").map(Number);
     return h * 60 + m;
@@ -41,6 +69,7 @@ export default function App() {
   function convertirHora(minutos) {
     const h = Math.floor(minutos / 60);
     const m = minutos % 60;
+
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
 
@@ -50,20 +79,32 @@ export default function App() {
       return;
     }
 
-    const servicio = servicios.find((s) => String(s.id) === String(servicioId));
+    const servicio = servicios.find(
+      (s) => String(s.id) === String(servicioId)
+    );
+
     if (!servicio) return;
 
     const duracion = servicio.duracion_minutos;
+
     const apertura = convertirMinutos("08:00");
     const cierre = convertirMinutos("20:00");
+
     const comidaInicio = convertirMinutos("14:00");
     const comidaFin = convertirMinutos("15:00");
 
     const lista = [];
 
-    for (let inicio = apertura; inicio + duracion <= cierre; inicio += 45) {
+    for (
+      let inicio = apertura;
+      inicio + duracion <= cierre;
+      inicio += 45
+    ) {
       const fin = inicio + duracion;
-      const cruzaComida = inicio < comidaFin && fin > comidaInicio;
+
+      const cruzaComida =
+        inicio < comidaFin &&
+        fin > comidaInicio;
 
       if (!cruzaComida) {
         lista.push({
@@ -78,14 +119,24 @@ export default function App() {
   }
 
   async function reservarCita() {
-    if (!servicioId || !fecha || !horario || !nombre || !telefono) {
+    if (
+      !servicioId ||
+      !fecha ||
+      !horario ||
+      !nombre ||
+      !telefono
+    ) {
       alert("Completa todos los campos");
       return;
     }
 
-    const servicio = servicios.find((s) => String(s.id) === String(servicioId));
+    const servicio = servicios.find(
+      (s) => String(s.id) === String(servicioId)
+    );
+
     const horaFin = convertirHora(
-      convertirMinutos(horario) + servicio.duracion_minutos
+      convertirMinutos(horario) +
+      servicio.duracion_minutos
     );
 
     let clienteId = null;
@@ -99,7 +150,10 @@ export default function App() {
     if (clienteExistente) {
       clienteId = clienteExistente.id;
     } else {
-      const { data: nuevoCliente, error: errorCliente } = await supabase
+      const {
+        data: nuevoCliente,
+        error: errorCliente,
+      } = await supabase
         .from("clientes")
         .insert([
           {
@@ -111,28 +165,39 @@ export default function App() {
         .single();
 
       if (errorCliente) {
-        alert("Error creando cliente: " + errorCliente.message);
+        alert(
+          "Error creando cliente: " +
+            errorCliente.message
+        );
         return;
       }
 
       clienteId = nuevoCliente.id;
     }
 
-    const { error: errorCita } = await supabase.from("citas").insert([
-      {
-        cliente_id: clienteId,
-        servicio_id: Number(servicioId),
-        fecha,
-        hora_inicio: horario,
-        hora_fin: horaFin,
-        estado: "confirmada",
-      },
-    ]);
+    const { error: errorCita } =
+      await supabase
+        .from("citas")
+        .insert([
+          {
+            cliente_id: clienteId,
+            servicio_id: Number(servicioId),
+            fecha,
+            hora_inicio: horario,
+            hora_fin: horaFin,
+            estado: "confirmada",
+          },
+        ]);
 
     if (errorCita) {
-      alert("Error guardando cita: " + errorCita.message);
+      alert(
+        "Error guardando cita: " +
+          errorCita.message
+      );
       return;
     }
+
+    await cargarCitas();
 
     alert("✅ Cita reservada correctamente");
 
@@ -152,27 +217,56 @@ export default function App() {
         <h2>Agendar cita</h2>
 
         <label>Servicio</label>
-        <select value={servicioId} onChange={(e) => setServicioId(e.target.value)}>
-          <option value="">Selecciona un servicio</option>
+
+        <select
+          value={servicioId}
+          onChange={(e) =>
+            setServicioId(e.target.value)
+          }
+        >
+          <option value="">
+            Selecciona un servicio
+          </option>
+
           {servicios.map((servicio) => (
-            <option key={servicio.id} value={servicio.id}>
-              {servicio.nombre} - ${servicio.precio}
+            <option
+              key={servicio.id}
+              value={servicio.id}
+            >
+              {servicio.nombre} - $
+              {servicio.precio}
             </option>
           ))}
         </select>
 
         <label>Fecha</label>
-        <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+
+        <input
+          type="date"
+          value={fecha}
+          onChange={(e) =>
+            setFecha(e.target.value)
+          }
+        />
 
         <label>Horario</label>
+
         <select
           value={horario}
-          onChange={(e) => setHorario(e.target.value)}
+          onChange={(e) =>
+            setHorario(e.target.value)
+          }
           disabled={!horarios.length}
         >
-          <option value="">Selecciona un horario</option>
+          <option value="">
+            Selecciona un horario
+          </option>
+
           {horarios.map((h) => (
-            <option key={h.inicio} value={h.inicio}>
+            <option
+              key={h.inicio}
+              value={h.inicio}
+            >
               {h.inicio} - {h.fin}
             </option>
           ))}
@@ -181,16 +275,67 @@ export default function App() {
         <input
           placeholder="Nombre"
           value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          onChange={(e) =>
+            setNombre(e.target.value)
+          }
         />
 
         <input
           placeholder="Teléfono"
           value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
+          onChange={(e) =>
+            setTelefono(e.target.value)
+          }
         />
 
-        <button onClick={reservarCita}>Reservar</button>
+        <button onClick={reservarCita}>
+          Reservar
+        </button>
+      </div>
+
+      <div
+        className="card"
+        style={{ marginTop: "30px" }}
+      >
+        <h2>📅 Agenda de citas</h2>
+
+        <table
+          style={{
+            width: "100%",
+            background: "white",
+            color: "black",
+          }}
+        >
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th>Servicio</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {citas.map((cita) => (
+              <tr key={cita.id}>
+                <td>{cita.fecha}</td>
+                <td>{cita.hora_inicio}</td>
+                <td>
+                  {cita.clientes?.nombre}
+                </td>
+                <td>
+                  {cita.clientes?.telefono}
+                </td>
+                <td>
+                  {cita.servicios?.nombre}
+                </td>
+                <td>{cita.estado}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
