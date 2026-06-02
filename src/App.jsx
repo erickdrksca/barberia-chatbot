@@ -52,14 +52,10 @@ export default function App() {
       return;
     }
 
-    const servicio = servicios.find(
-      (s) => String(s.id) === String(servicioId)
-    );
-
+    const servicio = servicios.find((s) => String(s.id) === String(servicioId));
     if (!servicio) return;
 
     const duracion = servicio.duracion_minutos;
-
     const apertura = convertirMinutos("08:00");
     const cierre = convertirMinutos("20:00");
     const comidaInicio = convertirMinutos("14:00");
@@ -86,9 +82,7 @@ export default function App() {
 
     for (let inicio = apertura; inicio + duracion <= cierre; inicio += 45) {
       const fin = inicio + duracion;
-
       const cruzaComida = inicio < comidaFin && fin > comidaInicio;
-
       const seEmpalma = citasOcupadas.some(
         (cita) => inicio < cita.fin && fin > cita.inicio
       );
@@ -111,36 +105,20 @@ export default function App() {
       return;
     }
 
-    const servicio = servicios.find(
-      (s) => String(s.id) === String(servicioId)
-    );
-
-    if (!servicio) {
-      alert("Selecciona un servicio válido.");
-      return;
-    }
-
+    const servicio = servicios.find((s) => String(s.id) === String(servicioId));
     const horaInicioMin = convertirMinutos(horario);
     const horaFin = convertirHora(horaInicioMin + servicio.duracion_minutos);
     const horaFinMin = convertirMinutos(horaFin);
 
-    const { data: citasExistentes, error: errorValidacion } = await supabase
+    const { data: citasExistentes } = await supabase
       .from("citas")
       .select("id, hora_inicio, hora_fin")
       .eq("fecha", fecha)
       .eq("estado", "confirmada");
 
-    if (errorValidacion) {
-      alert("Error validando horario: " + errorValidacion.message);
-      return;
-    }
-
     const existeEmpalme = (citasExistentes || []).some((cita) => {
-      const inicioExistente = convertirMinutos(
-        cita.hora_inicio.substring(0, 5)
-      );
+      const inicioExistente = convertirMinutos(cita.hora_inicio.substring(0, 5));
       const finExistente = convertirMinutos(cita.hora_fin.substring(0, 5));
-
       return horaInicioMin < finExistente && horaFinMin > inicioExistente;
     });
 
@@ -152,29 +130,18 @@ export default function App() {
 
     let clienteId = null;
 
-    const { data: clienteExistente, error: errorBuscarCliente } =
-      await supabase
-        .from("clientes")
-        .select("*")
-        .eq("telefono", telefono)
-        .maybeSingle();
-
-    if (errorBuscarCliente) {
-      alert("Error buscando cliente: " + errorBuscarCliente.message);
-      return;
-    }
+    const { data: clienteExistente } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("telefono", telefono)
+      .maybeSingle();
 
     if (clienteExistente) {
       clienteId = clienteExistente.id;
     } else {
       const { data: nuevoCliente, error: errorCliente } = await supabase
         .from("clientes")
-        .insert([
-          {
-            nombre,
-            telefono,
-          },
-        ])
+        .insert([{ nombre, telefono }])
         .select()
         .single();
 
@@ -218,149 +185,251 @@ export default function App() {
     (s) => String(s.id) === String(servicioId)
   );
 
+  const inputStyle = {
+    width: "100%",
+    height: "48px",
+    padding: "0 14px",
+    borderRadius: "12px",
+    border: "1px solid rgba(212, 175, 55, 0.35)",
+    background: "rgba(255,255,255,0.96)",
+    color: "#111827",
+    fontSize: "15px",
+    boxSizing: "border-box",
+    outline: "none",
+  };
+
+  const labelStyle = {
+    display: "block",
+    marginBottom: "8px",
+    fontWeight: "700",
+    color: "#f8fafc",
+    fontSize: "14px",
+  };
+
+  const fieldStyle = {
+    marginBottom: "18px",
+  };
+
   return (
     <div
       style={{
         minHeight: "100vh",
+        padding: "36px 16px",
         background:
-          "linear-gradient(rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.94)), url('/logo.png') center/420px no-repeat fixed",
-        padding: "30px 16px",
+          "radial-gradient(circle at top, rgba(212,175,55,0.18), transparent 35%), linear-gradient(rgba(2,6,23,0.86), rgba(2,6,23,0.96)), url('/logo.png') center/520px no-repeat fixed",
       }}
     >
       <div
-        className="card"
         style={{
-          maxWidth: "680px",
+          maxWidth: "760px",
           margin: "0 auto",
-          borderRadius: "18px",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
-          backdropFilter: "blur(6px)",
+          padding: "1px",
+          borderRadius: "26px",
+          background:
+            "linear-gradient(135deg, rgba(212,175,55,0.85), rgba(255,255,255,0.08), rgba(212,175,55,0.35))",
+          boxShadow: "0 28px 90px rgba(0,0,0,0.55)",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <img
-            src="/logo.png"
-            alt="Barbería Alexis"
+        <div
+          style={{
+            borderRadius: "25px",
+            padding: "34px",
+            background: "rgba(15, 23, 42, 0.92)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <div style={{ textAlign: "center", marginBottom: "34px" }}>
+            <div
+              style={{
+                width: "170px",
+                height: "170px",
+                margin: "0 auto 16px",
+                borderRadius: "50%",
+                padding: "8px",
+                background:
+                  "linear-gradient(135deg, rgba(212,175,55,0.95), rgba(255,255,255,0.18))",
+                boxShadow: "0 14px 40px rgba(0,0,0,0.35)",
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="Barbería Alexis"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                  display: "block",
+                }}
+              />
+            </div>
+
+            <h1
+              style={{
+                margin: "0",
+                fontSize: "42px",
+                lineHeight: "1.05",
+                color: "#ffffff",
+                letterSpacing: "-1px",
+              }}
+            >
+              Barbería Alexis
+            </h1>
+
+            <p
+              style={{
+                margin: "10px auto 0",
+                color: "#cbd5e1",
+                maxWidth: "430px",
+                fontSize: "15px",
+              }}
+            >
+              Reserva tu cita en línea. Elige servicio, fecha y horario disponible.
+            </p>
+          </div>
+
+          <div
             style={{
-              width: "165px",
-              height: "165px",
-              objectFit: "contain",
-              marginBottom: "8px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "18px",
             }}
-          />
+          >
+            <div style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Servicio</label>
+              <select
+                value={servicioId}
+                onChange={(e) => setServicioId(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="">Selecciona un servicio</option>
+                {servicios.map((servicio) => (
+                  <option key={servicio.id} value={servicio.id}>
+                    {servicio.nombre} - ${servicio.precio}
+                  </option>
+                ))}
+              </select>
 
-          <h1 style={{ margin: "0 0 6px", fontSize: "38px" }}>
-            Barbería Alexis
-          </h1>
+              {servicioSeleccionado && (
+                <div
+                  style={{
+                    marginTop: "10px",
+                    color: "#d4af37",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                  }}
+                >
+                  Duración: {servicioSeleccionado.duracion_minutos} min · Precio: $
+                  {servicioSeleccionado.precio}
+                </div>
+              )}
+            </div>
 
-          <p style={{ color: "#cbd5e1", margin: 0 }}>
-            Agenda tu cita en línea de forma rápida y sencilla
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Fecha</label>
+              <input
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Horario disponible</label>
+              <select
+                value={horario}
+                onChange={(e) => setHorario(e.target.value)}
+                disabled={!horarios.length}
+                style={{
+                  ...inputStyle,
+                  opacity: !horarios.length ? 0.65 : 1,
+                }}
+              >
+                <option value="">
+                  {servicioId && fecha
+                    ? horarios.length
+                      ? "Selecciona un horario"
+                      : "No hay horarios disponibles"
+                    : "Selecciona servicio y fecha"}
+                </option>
+
+                {horarios.map((h) => (
+                  <option key={h.inicio} value={h.inicio}>
+                    {h.inicio} - {h.fin}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Nombre</label>
+              <input
+                placeholder="Ej. Juan Pérez"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Teléfono</label>
+              <input
+                placeholder="Ej. 5512345678"
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Comentarios</label>
+              <textarea
+                placeholder="Ej. degradado bajo, barba completa, corte para niño..."
+                value={comentarios}
+                onChange={(e) => setComentarios(e.target.value)}
+                style={{
+                  ...inputStyle,
+                  height: "96px",
+                  paddingTop: "12px",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={reservarCita}
+            style={{
+              width: "100%",
+              height: "54px",
+              borderRadius: "14px",
+              border: "none",
+              background:
+                "linear-gradient(135deg, #d4af37, #b88917)",
+              color: "#111827",
+              fontSize: "17px",
+              fontWeight: "900",
+              cursor: "pointer",
+              marginTop: "8px",
+              boxShadow: "0 12px 28px rgba(212,175,55,0.22)",
+            }}
+          >
+            Reservar cita
+          </button>
+
+          <p
+            style={{
+              textAlign: "center",
+              color: "#94a3b8",
+              fontSize: "13px",
+              marginTop: "18px",
+            }}
+          >
+            Horario: 8:00 AM a 8:00 PM · Comida: 2:00 PM a 3:00 PM
           </p>
         </div>
-
-        <h2 style={{ marginBottom: "18px" }}>Agendar cita</h2>
-
-        <label>Servicio</label>
-        <select
-          value={servicioId}
-          onChange={(e) => setServicioId(e.target.value)}
-        >
-          <option value="">Selecciona un servicio</option>
-
-          {servicios.map((servicio) => (
-            <option key={servicio.id} value={servicio.id}>
-              {servicio.nombre} - ${servicio.precio}
-            </option>
-          ))}
-        </select>
-
-        {servicioSeleccionado && (
-          <p style={{ color: "#cbd5e1", margin: "8px 0 0" }}>
-            Duración: {servicioSeleccionado.duracion_minutos} minutos
-          </p>
-        )}
-
-        <label>Fecha</label>
-        <input
-          type="date"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-        />
-
-        <label>Horario disponible</label>
-        <select
-          value={horario}
-          onChange={(e) => setHorario(e.target.value)}
-          disabled={!horarios.length}
-        >
-          <option value="">
-            {servicioId && fecha
-              ? horarios.length
-                ? "Selecciona un horario"
-                : "No hay horarios disponibles"
-              : "Selecciona servicio y fecha"}
-          </option>
-
-          {horarios.map((h) => (
-            <option key={h.inicio} value={h.inicio}>
-              {h.inicio} - {h.fin}
-            </option>
-          ))}
-        </select>
-
-        <label>Nombre</label>
-        <input
-          placeholder="Ej. Juan Pérez"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
-
-        <label>Teléfono</label>
-        <input
-          placeholder="Ej. 5512345678"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-        />
-
-        <label>Comentarios</label>
-        <textarea
-          placeholder="Ej. degradado bajo, barba completa, corte para niño..."
-          value={comentarios}
-          onChange={(e) => setComentarios(e.target.value)}
-          style={{
-            width: "100%",
-            minHeight: "90px",
-            padding: "12px",
-            marginTop: "10px",
-            borderRadius: "8px",
-            border: "none",
-            resize: "vertical",
-            boxSizing: "border-box",
-            fontFamily: "inherit",
-          }}
-        />
-
-        <button
-          onClick={reservarCita}
-          style={{
-            marginTop: "18px",
-            fontSize: "16px",
-            fontWeight: "bold",
-          }}
-        >
-          Reservar cita
-        </button>
-
-        <p
-          style={{
-            textAlign: "center",
-            color: "#94a3b8",
-            fontSize: "13px",
-            marginTop: "18px",
-          }}
-        >
-          Horario de atención: 8:00 AM a 8:00 PM · Comida: 2:00 PM a 3:00 PM
-        </p>
       </div>
     </div>
   );
