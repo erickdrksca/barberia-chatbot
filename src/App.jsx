@@ -5,7 +5,10 @@ export default function App() {
   const [servicios, setServicios] = useState([]);
   const [servicioId, setServicioId] = useState("");
   const [fecha, setFecha] = useState("");
+  const [horario, setHorario] = useState("");
   const [horarios, setHorarios] = useState([]);
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
 
   useEffect(() => {
     cargarServicios();
@@ -13,7 +16,7 @@ export default function App() {
 
   useEffect(() => {
     generarHorarios();
-  }, [servicioId, fecha]);
+  }, [servicioId, fecha, servicios]);
 
   async function cargarServicios() {
     const { data, error } = await supabase
@@ -51,7 +54,6 @@ export default function App() {
     if (!servicio) return;
 
     const duracion = servicio.duracion_minutos;
-
     const apertura = convertirMinutos("08:00");
     const cierre = convertirMinutos("20:00");
     const comidaInicio = convertirMinutos("14:00");
@@ -61,7 +63,6 @@ export default function App() {
 
     for (let inicio = apertura; inicio + duracion <= cierre; inicio += 45) {
       const fin = inicio + duracion;
-
       const cruzaComida = inicio < comidaFin && fin > comidaInicio;
 
       if (!cruzaComida) {
@@ -73,6 +74,74 @@ export default function App() {
     }
 
     setHorarios(lista);
+    setHorario("");
+  }
+
+  async function reservarCita() {
+    if (!servicioId || !fecha || !horario || !nombre || !telefono) {
+      alert("Completa todos los campos");
+      return;
+    }
+
+    const servicio = servicios.find((s) => String(s.id) === String(servicioId));
+    const horaFin = convertirHora(
+      convertirMinutos(horario) + servicio.duracion_minutos
+    );
+
+    let clienteId = null;
+
+    const { data: clienteExistente } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("telefono", telefono)
+      .maybeSingle();
+
+    if (clienteExistente) {
+      clienteId = clienteExistente.id;
+    } else {
+      const { data: nuevoCliente, error: errorCliente } = await supabase
+        .from("clientes")
+        .insert([
+          {
+            nombre,
+            telefono,
+          },
+        ])
+        .select()
+        .single();
+
+      if (errorCliente) {
+        alert("Error creando cliente: " + errorCliente.message);
+        return;
+      }
+
+      clienteId = nuevoCliente.id;
+    }
+
+    const { error: errorCita } = await supabase.from("citas").insert([
+      {
+        cliente_id: clienteId,
+        servicio_id: Number(servicioId),
+        fecha,
+        hora_inicio: horario,
+        hora_fin: horaFin,
+        estado: "confirmada",
+      },
+    ]);
+
+    if (errorCita) {
+      alert("Error guardando cita: " + errorCita.message);
+      return;
+    }
+
+    alert("✅ Cita reservada correctamente");
+
+    setServicioId("");
+    setFecha("");
+    setHorario("");
+    setNombre("");
+    setTelefono("");
+    setHorarios([]);
   }
 
   return (
@@ -93,14 +162,14 @@ export default function App() {
         </select>
 
         <label>Fecha</label>
-        <input
-          type="date"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-        />
+        <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
 
         <label>Horario</label>
-        <select disabled={!horarios.length}>
+        <select
+          value={horario}
+          onChange={(e) => setHorario(e.target.value)}
+          disabled={!horarios.length}
+        >
           <option value="">Selecciona un horario</option>
           {horarios.map((h) => (
             <option key={h.inicio} value={h.inicio}>
@@ -109,10 +178,19 @@ export default function App() {
           ))}
         </select>
 
-        <input placeholder="Nombre" />
-        <input placeholder="Teléfono" />
+        <input
+          placeholder="Nombre"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+        />
 
-        <button>Reservar</button>
+        <input
+          placeholder="Teléfono"
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+        />
+
+        <button onClick={reservarCita}>Reservar</button>
       </div>
     </div>
   );
