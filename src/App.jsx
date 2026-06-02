@@ -15,9 +15,9 @@ export default function App() {
       .eq("activo", true)
       .order("id", { ascending: true });
 
- if (error) {
+if (error) {
   console.error(error);
-  alert("Error cargando servicios");
+  alert(JSON.stringify(error));
   return;
 }
 
