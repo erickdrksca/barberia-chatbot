@@ -366,7 +366,10 @@ export default function App() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "0.85fr 1.15fr",
+            gridTemplateColumns:
+  window.innerWidth < 768
+    ? "1fr"
+    : "0.85fr 1.15fr",
             gap: "24px",
             alignItems: "start",
           }}
@@ -445,7 +448,10 @@ export default function App() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns:
+  window.innerWidth < 768
+    ? "1fr"
+    : "1fr 1fr",
                 gap: "18px",
               }}
             >
