@@ -8,6 +8,10 @@ export default function Admin() {
   const [ventaTotal, setVentaTotal] = useState(0);
   const [citasPendientes, setCitasPendientes] = useState(0);
   const [citasHoy, setCitasHoy] = useState(0);
+  const [password, setPassword] = useState("");
+const [autorizado, setAutorizado] = useState(
+  localStorage.getItem("adminAuth") === "true"
+);
 
   useEffect(() => {
     cargarDatos();
@@ -172,6 +176,37 @@ export default function Admin() {
     verticalAlign: "top",
     fontSize: "14px",
   };
+
+  if (!autorizado) {
+  return (
+    <div className="container">
+      <div className="card" style={{ maxWidth: "400px", margin: "80px auto" }}>
+        <h1>🔒 Panel Admin</h1>
+        <p>Ingresa la contraseña</p>
+
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <button
+          onClick={() => {
+            if (password === "alexis2026") {
+              localStorage.setItem("adminAuth", "true");
+              setAutorizado(true);
+            } else {
+              alert("Contraseña incorrecta");
+            }
+          }}
+        >
+          Entrar
+        </button>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div
