@@ -50,80 +50,50 @@ export default function Admin() {
 
     setCitas(lista);
 
-    const pendientes = lista.filter(
-      (c) => c.estado === "confirmada"
-    );
+    const pendientes = lista.filter((c) => c.estado === "confirmada");
 
     const hoyConfirmadas = lista.filter(
-      (c) =>
-        c.fecha === hoy &&
-        c.estado === "confirmada"
+      (c) => c.fecha === hoy && c.estado === "confirmada"
     );
 
     const hoyCompletadas = lista.filter(
-      (c) =>
-        c.fecha === hoy &&
-        c.estado === "completada"
+      (c) => c.fecha === hoy && c.estado === "completada"
     );
 
-    const completadas = lista.filter(
-      (c) => c.estado === "completada"
-    );
+    const completadas = lista.filter((c) => c.estado === "completada");
 
     setCitasPendientes(pendientes.length);
     setCitasHoy(hoyConfirmadas.length + hoyCompletadas.length);
 
     setVentaHoy(
       hoyCompletadas.reduce(
-        (sum, cita) =>
-          sum + Number(cita.servicios?.precio || 0),
+        (sum, cita) => sum + Number(cita.servicios?.precio || 0),
         0
       )
     );
 
     setVentaTotal(
       completadas.reduce(
-        (sum, cita) =>
-          sum + Number(cita.servicios?.precio || 0),
+        (sum, cita) => sum + Number(cita.servicios?.precio || 0),
         0
       )
     );
   }
 
-  async function completar(id) {
-    const confirmar = confirm("¿Marcar esta cita como completada?");
+  async function actualizarEstado(id, nuevoEstado) {
+    const confirmar = confirm(`¿Cambiar esta cita a ${nuevoEstado}?`);
 
     if (!confirmar) return;
 
     const { error } = await supabase
       .from("citas")
       .update({
-        estado: "completada",
+        estado: nuevoEstado,
       })
       .eq("id", id);
 
     if (error) {
-      alert("Error completando cita: " + error.message);
-      return;
-    }
-
-    await cargarDatos();
-  }
-
-  async function cancelar(id) {
-    const confirmar = confirm("¿Cancelar esta cita?");
-
-    if (!confirmar) return;
-
-    const { error } = await supabase
-      .from("citas")
-      .update({
-        estado: "cancelada",
-      })
-      .eq("id", id);
-
-    if (error) {
-      alert("Error cancelando cita: " + error.message);
+      alert("Error actualizando cita: " + error.message);
       return;
     }
 
@@ -145,9 +115,9 @@ export default function Admin() {
   }
 
   function colorEstado(estado) {
-    if (estado === "completada") return "green";
-    if (estado === "cancelada") return "red";
-    return "orange";
+    if (estado === "completada") return "#22c55e";
+    if (estado === "cancelada") return "#ef4444";
+    return "#f59e0b";
   }
 
   function textoEstado(estado) {
@@ -156,165 +126,302 @@ export default function Admin() {
     return "Confirmada";
   }
 
-  const estilosCelda = {
-    padding: "12px",
-    borderBottom: "1px solid #ddd",
-    verticalAlign: "top",
+  const metricas = [
+    {
+      titulo: "Clientes",
+      valor: clientes,
+      icono: "👥",
+    },
+    {
+      titulo: "Citas hoy",
+      valor: citasHoy,
+      icono: "📅",
+    },
+    {
+      titulo: "Pendientes",
+      valor: citasPendientes,
+      icono: "⏳",
+    },
+    {
+      titulo: "Venta hoy",
+      valor: `$${ventaHoy}`,
+      icono: "💰",
+    },
+    {
+      titulo: "Venta total",
+      valor: `$${ventaTotal}`,
+      icono: "💵",
+    },
+  ];
+
+  const th = {
+    padding: "14px",
+    textAlign: "left",
+    color: "#111827",
+    background: "#f8fafc",
+    borderBottom: "1px solid #e5e7eb",
+    fontSize: "13px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
   };
 
-  const estilosHeader = {
-    padding: "12px",
-    borderBottom: "2px solid #111827",
-    textAlign: "left",
-    background: "#f3f4f6",
+  const td = {
+    padding: "14px",
+    borderBottom: "1px solid #e5e7eb",
+    color: "#111827",
+    verticalAlign: "top",
+    fontSize: "14px",
   };
 
   return (
-    <div className="container">
-      <h1>💈 Panel Barbería</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "34px 16px",
+        background:
+          "radial-gradient(circle at top, rgba(212,175,55,0.18), transparent 34%), linear-gradient(135deg, #020617, #111827)",
+      }}
+    >
+      <main style={{ maxWidth: "1180px", margin: "0 auto" }}>
+        <section
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "18px",
+            alignItems: "center",
+            marginBottom: "24px",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                color: "#d4af37",
+                margin: 0,
+                fontWeight: "900",
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                fontSize: "13px",
+              }}
+            >
+              Administración
+            </p>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-          gap: "15px",
-          marginBottom: "20px",
-        }}
-      >
-        <div className="card">
-          <h3>👥 Clientes</h3>
-          <h2>{clientes}</h2>
-        </div>
+            <h1
+              style={{
+                color: "white",
+                margin: "8px 0 0",
+                fontSize: "44px",
+                lineHeight: "1",
+              }}
+            >
+              Panel Barbería Alexis
+            </h1>
+          </div>
 
-        <div className="card">
-          <h3>📅 Citas hoy</h3>
-          <h2>{citasHoy}</h2>
-        </div>
-
-        <div className="card">
-          <h3>⏳ Pendientes</h3>
-          <h2>{citasPendientes}</h2>
-        </div>
-
-        <div className="card">
-          <h3>💰 Venta hoy</h3>
-          <h2>${ventaHoy}</h2>
-        </div>
-
-        <div className="card">
-          <h3>💵 Venta total</h3>
-          <h2>${ventaTotal}</h2>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginTop: 20 }}>
-        <h2>Agenda</h2>
-
-        <div style={{ overflowX: "auto" }}>
-          <table
+          <img
+            src="/logo.png"
+            alt="Barbería Alexis"
             style={{
-              width: "100%",
-              minWidth: "900px",
-              background: "white",
-              color: "black",
-              borderCollapse: "collapse",
-              borderRadius: "8px",
-              overflow: "hidden",
+              width: "86px",
+              height: "86px",
+              objectFit: "cover",
+              borderRadius: "50%",
+              border: "2px solid #d4af37",
+            }}
+          />
+        </section>
+
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+            gap: "16px",
+            marginBottom: "22px",
+          }}
+        >
+          {metricas.map((m) => (
+            <div
+              key={m.titulo}
+              style={{
+                background: "rgba(15, 23, 42, 0.94)",
+                border: "1px solid rgba(212,175,55,0.22)",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 18px 48px rgba(0,0,0,0.28)",
+              }}
+            >
+              <div style={{ fontSize: "25px", marginBottom: "10px" }}>
+                {m.icono}
+              </div>
+
+              <p
+                style={{
+                  color: "#94a3b8",
+                  margin: 0,
+                  fontSize: "13px",
+                  fontWeight: "800",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                {m.titulo}
+              </p>
+
+              <h2
+                style={{
+                  color: "white",
+                  margin: "8px 0 0",
+                  fontSize: "30px",
+                }}
+              >
+                {m.valor}
+              </h2>
+            </div>
+          ))}
+        </section>
+
+        <section
+          style={{
+            background: "rgba(15, 23, 42, 0.94)",
+            border: "1px solid rgba(212,175,55,0.22)",
+            borderRadius: "22px",
+            padding: "22px",
+            boxShadow: "0 22px 60px rgba(0,0,0,0.35)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "12px",
+              marginBottom: "16px",
             }}
           >
-            <thead>
-              <tr>
-                <th style={estilosHeader}>Fecha</th>
-                <th style={estilosHeader}>Hora</th>
-                <th style={estilosHeader}>Cliente</th>
-                <th style={estilosHeader}>Teléfono</th>
-                <th style={estilosHeader}>Servicio</th>
-                <th style={estilosHeader}>Comentarios</th>
-                <th style={estilosHeader}>Estado</th>
-                <th style={estilosHeader}>Acciones</th>
-              </tr>
-            </thead>
+            <h2 style={{ color: "white", margin: 0 }}>Agenda</h2>
 
-            <tbody>
-              {citas.map((cita) => (
-                <tr key={cita.id}>
-                  <td style={estilosCelda}>
-                    {formatearFecha(cita.fecha)}
-                  </td>
+            <button
+              onClick={cargarDatos}
+              style={{
+                border: "1px solid rgba(212,175,55,0.4)",
+                background: "rgba(212,175,55,0.12)",
+                color: "#d4af37",
+                borderRadius: "12px",
+                padding: "10px 14px",
+                fontWeight: "900",
+                cursor: "pointer",
+              }}
+            >
+              Actualizar
+            </button>
+          </div>
 
-                  <td style={estilosCelda}>
-                    {formatearHora(cita.hora_inicio)}
-                  </td>
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                minWidth: "980px",
+                borderCollapse: "collapse",
+                background: "white",
+                borderRadius: "16px",
+                overflow: "hidden",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th style={th}>Fecha</th>
+                  <th style={th}>Hora</th>
+                  <th style={th}>Cliente</th>
+                  <th style={th}>Teléfono</th>
+                  <th style={th}>Servicio</th>
+                  <th style={th}>Comentarios</th>
+                  <th style={th}>Estado</th>
+                  <th style={th}>Acciones</th>
+                </tr>
+              </thead>
 
-                  <td
-                    style={{
-                      ...estilosCelda,
-                      whiteSpace: "nowrap",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {cita.clientes?.nombre || "-"}
-                  </td>
-
-                  <td
-                    style={{
-                      ...estilosCelda,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {cita.clientes?.telefono || "-"}
-                  </td>
-
-                  <td style={estilosCelda}>
-                    {cita.servicios?.nombre || "-"}
-                  </td>
-
-                  <td style={estilosCelda}>
-                    {cita.comentarios || "-"}
-                  </td>
-
-                  <td
-                    style={{
-                      ...estilosCelda,
-                      fontWeight: "bold",
-                      color: colorEstado(cita.estado),
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {textoEstado(cita.estado)}
-                  </td>
-
-                  <td style={estilosCelda}>
-                    {cita.estado === "confirmada" ? (
-                      <div
+              <tbody>
+                {citas.map((cita) => (
+                  <tr key={cita.id}>
+                    <td style={td}>{formatearFecha(cita.fecha)}</td>
+                    <td style={td}>{formatearHora(cita.hora_inicio)}</td>
+                    <td style={{ ...td, fontWeight: "900", whiteSpace: "nowrap" }}>
+                      {cita.clientes?.nombre || "-"}
+                    </td>
+                    <td style={{ ...td, whiteSpace: "nowrap" }}>
+                      {cita.clientes?.telefono || "-"}
+                    </td>
+                    <td style={td}>{cita.servicios?.nombre || "-"}</td>
+                    <td style={td}>{cita.comentarios || "-"}</td>
+                    <td style={td}>
+                      <span
                         style={{
-                          display: "flex",
-                          gap: "8px",
-                          flexWrap: "wrap",
+                          display: "inline-block",
+                          padding: "7px 10px",
+                          borderRadius: "999px",
+                          color: "white",
+                          fontWeight: "900",
+                          fontSize: "12px",
+                          background: colorEstado(cita.estado),
                         }}
                       >
-                        <button onClick={() => completar(cita.id)}>
-                          ✅ Completar
-                        </button>
-
-                        <button onClick={() => cancelar(cita.id)}>
-                          🗑 Cancelar
-                        </button>
-                      </div>
-                    ) : (
-                      <span style={{ color: "#6b7280" }}>
-                        Sin acciones
+                        {textoEstado(cita.estado)}
                       </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                    <td style={td}>
+                      {cita.estado === "confirmada" ? (
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          <button
+                            onClick={() =>
+                              actualizarEstado(cita.id, "completada")
+                            }
+                            style={{
+                              background: "#16a34a",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "10px",
+                              padding: "9px 10px",
+                              fontWeight: "900",
+                              cursor: "pointer",
+                            }}
+                          >
+                            ✅ Completar
+                          </button>
 
-        {citas.length === 0 && <p>No hay citas registradas.</p>}
-      </div>
+                          <button
+                            onClick={() =>
+                              actualizarEstado(cita.id, "cancelada")
+                            }
+                            style={{
+                              background: "#dc2626",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "10px",
+                              padding: "9px 10px",
+                              fontWeight: "900",
+                              cursor: "pointer",
+                            }}
+                          >
+                            🗑 Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ color: "#6b7280", fontWeight: "700" }}>
+                          Sin acciones
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {citas.length === 0 && (
+            <p style={{ color: "#cbd5e1" }}>No hay citas registradas.</p>
+          )}
+        </section>
+      </main>
     </div>
   );
 }
