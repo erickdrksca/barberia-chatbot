@@ -22,7 +22,7 @@ export default function Admin() {
 
     setClientes(count || 0);
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("citas")
       .select(`
         *,
@@ -35,7 +35,13 @@ export default function Admin() {
           precio
         )
       `)
-      .order("fecha");
+      .order("fecha", { ascending: true })
+      .order("hora_inicio", { ascending: true });
+
+    if (error) {
+      alert("Error cargando agenda: " + error.message);
+      return;
+    }
 
     setCitas(data || []);
 
@@ -48,7 +54,7 @@ export default function Admin() {
 
     const total = citasHoy.reduce(
       (sum, cita) =>
-        sum + (cita.servicios?.precio || 0),
+        sum + Number(cita.servicios?.precio || 0),
       0
     );
 
@@ -56,18 +62,35 @@ export default function Admin() {
   }
 
   async function cancelar(id) {
-    const confirmar = confirm(
-      "¿Cancelar cita?"
-    );
+    const confirmar = confirm("¿Cancelar esta cita?");
 
     if (!confirmar) return;
 
-    await supabase
+    const { error } = await supabase
       .from("citas")
       .delete()
       .eq("id", id);
 
-    cargarDatos();
+    if (error) {
+      alert("Error cancelando cita: " + error.message);
+      return;
+    }
+
+    await cargarDatos();
+  }
+
+  function formatearFecha(fecha) {
+    if (!fecha) return "";
+
+    const [year, month, day] = fecha.split("-");
+
+    return `${day}/${month}/${year}`;
+  }
+
+  function formatearHora(hora) {
+    if (!hora) return "";
+
+    return hora.substring(0, 5);
   }
 
   return (
@@ -91,6 +114,7 @@ export default function Admin() {
             width: "100%",
             background: "white",
             color: "black",
+            borderCollapse: "collapse",
           }}
         >
           <thead>
@@ -98,7 +122,10 @@ export default function Admin() {
               <th>Fecha</th>
               <th>Hora</th>
               <th>Cliente</th>
+              <th>Teléfono</th>
               <th>Servicio</th>
+              <th>Comentarios</th>
+              <th>Estado</th>
               <th>Acción</th>
             </tr>
           </thead>
@@ -106,29 +133,16 @@ export default function Admin() {
           <tbody>
             {citas.map((cita) => (
               <tr key={cita.id}>
-                <td>{cita.fecha}</td>
-
-                <td>
-                  {cita.hora_inicio}
-                </td>
-
-                <td>
-                  {
-                    cita.clientes?.nombre
-                  }
-                </td>
-
-                <td>
-                  {
-                    cita.servicios?.nombre
-                  }
-                </td>
-
+                <td>{formatearFecha(cita.fecha)}</td>
+                <td>{formatearHora(cita.hora_inicio)}</td>
+                <td>{cita.clientes?.nombre || "-"}</td>
+                <td>{cita.clientes?.telefono || "-"}</td>
+                <td>{cita.servicios?.nombre || "-"}</td>
+                <td>{cita.comentarios || "-"}</td>
+                <td>{cita.estado}</td>
                 <td>
                   <button
-                    onClick={() =>
-                      cancelar(cita.id)
-                    }
+                    onClick={() => cancelar(cita.id)}
                   >
                     🗑 Cancelar
                   </button>
@@ -137,6 +151,10 @@ export default function Admin() {
             ))}
           </tbody>
         </table>
+
+        {citas.length === 0 && (
+          <p>No hay citas registradas.</p>
+        )}
       </div>
     </div>
   );
