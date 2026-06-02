@@ -256,15 +256,28 @@ export default function App() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "220px 1fr",
+              gridTemplateColumns:
+  window.innerWidth < 768
+    ? "1fr"
+    : "220px 1fr",
+textAlign:
+  window.innerWidth < 768
+    ? "center"
+    : "left",
               gap: "28px",
               alignItems: "center",
             }}
           >
             <div
               style={{
-                width: "190px",
-                height: "190px",
+               width:
+  window.innerWidth < 768
+    ? "150px"
+    : "190px",
+height:
+  window.innerWidth < 768
+    ? "150px"
+    : "190px",
                 borderRadius: "50%",
                 padding: "8px",
                 margin: "0 auto",
@@ -303,7 +316,10 @@ export default function App() {
               <h1
                 style={{
                   color: "white",
-                  fontSize: "52px",
+                  fontSize:
+  window.innerWidth < 768
+    ? "40px"
+    : "52px",
                   margin: 0,
                   lineHeight: "1",
                   letterSpacing: "-1.5px",
