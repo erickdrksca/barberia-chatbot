@@ -15,11 +15,11 @@ export default function App() {
       .eq("activo", true)
       .order("id", { ascending: true });
 
-    if (error) {
-      console.error(error);
-      alert("Error cargando servicios");
-      return;
-    }
+ if (error) {
+  console.error(error);
+  alert("Error cargando servicios");
+  return;
+}
 
     setServicios(data);
   }
