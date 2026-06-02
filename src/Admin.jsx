@@ -9,9 +9,9 @@ export default function Admin() {
   const [citasPendientes, setCitasPendientes] = useState(0);
   const [citasHoy, setCitasHoy] = useState(0);
   const [password, setPassword] = useState("");
-const [autorizado, setAutorizado] = useState(
-  localStorage.getItem("adminAuth") === "true"
-);
+  const [autorizado, setAutorizado] = useState(
+    localStorage.getItem("adminAuth") === "true"
+  );
 
   useEffect(() => {
     cargarDatos();
@@ -22,10 +22,7 @@ const [autorizado, setAutorizado] = useState(
 
     const { count } = await supabase
       .from("clientes")
-      .select("*", {
-        count: "exact",
-        head: true,
-      });
+      .select("*", { count: "exact", head: true });
 
     setClientes(count || 0);
 
@@ -51,19 +48,15 @@ const [autorizado, setAutorizado] = useState(
     }
 
     const lista = data || [];
-
     setCitas(lista);
 
     const pendientes = lista.filter((c) => c.estado === "confirmada");
-
     const hoyConfirmadas = lista.filter(
       (c) => c.fecha === hoy && c.estado === "confirmada"
     );
-
     const hoyCompletadas = lista.filter(
       (c) => c.fecha === hoy && c.estado === "completada"
     );
-
     const completadas = lista.filter((c) => c.estado === "completada");
 
     setCitasPendientes(pendientes.length);
@@ -91,9 +84,7 @@ const [autorizado, setAutorizado] = useState(
 
     const { error } = await supabase
       .from("citas")
-      .update({
-        estado: nuevoEstado,
-      })
+      .update({ estado: nuevoEstado })
       .eq("id", id);
 
     if (error) {
@@ -106,15 +97,12 @@ const [autorizado, setAutorizado] = useState(
 
   function formatearFecha(fecha) {
     if (!fecha) return "";
-
     const [year, month, day] = fecha.split("-");
-
     return `${day}/${month}/${year}`;
   }
 
   function formatearHora(hora) {
     if (!hora) return "";
-
     return hora.substring(0, 5);
   }
 
@@ -130,32 +118,18 @@ const [autorizado, setAutorizado] = useState(
     return "Confirmada";
   }
 
+  function cerrarSesion() {
+    localStorage.removeItem("adminAuth");
+    setAutorizado(false);
+    setPassword("");
+  }
+
   const metricas = [
-    {
-      titulo: "Clientes",
-      valor: clientes,
-      icono: "👥",
-    },
-    {
-      titulo: "Citas hoy",
-      valor: citasHoy,
-      icono: "📅",
-    },
-    {
-      titulo: "Pendientes",
-      valor: citasPendientes,
-      icono: "⏳",
-    },
-    {
-      titulo: "Venta hoy",
-      valor: `$${ventaHoy}`,
-      icono: "💰",
-    },
-    {
-      titulo: "Venta total",
-      valor: `$${ventaTotal}`,
-      icono: "💵",
-    },
+    { titulo: "Clientes", valor: clientes, icono: "👥" },
+    { titulo: "Citas hoy", valor: citasHoy, icono: "📅" },
+    { titulo: "Pendientes", valor: citasPendientes, icono: "⏳" },
+    { titulo: "Venta hoy", valor: `$${ventaHoy}`, icono: "💰" },
+    { titulo: "Venta total", valor: `$${ventaTotal}`, icono: "💵" },
   ];
 
   const th = {
@@ -178,35 +152,35 @@ const [autorizado, setAutorizado] = useState(
   };
 
   if (!autorizado) {
-  return (
-    <div className="container">
-      <div className="card" style={{ maxWidth: "400px", margin: "80px auto" }}>
-        <h1>🔒 Panel Admin</h1>
-        <p>Ingresa la contraseña</p>
+    return (
+      <div className="container">
+        <div className="card" style={{ maxWidth: "400px", margin: "80px auto" }}>
+          <h1>🔒 Panel Admin</h1>
+          <p>Ingresa la contraseña</p>
 
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        <button
-          onClick={() => {
-            if (password === "alexis2026") {
-              localStorage.setItem("adminAuth", "true");
-              setAutorizado(true);
-            } else {
-              alert("Contraseña incorrecta");
-            }
-          }}
-        >
-          Entrar
-        </button>
+          <button
+            onClick={() => {
+              if (password === "alexis2026") {
+                localStorage.setItem("adminAuth", "true");
+                setAutorizado(true);
+              } else {
+                alert("Contraseña incorrecta");
+              }
+            }}
+          >
+            Entrar
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div
@@ -251,6 +225,23 @@ const [autorizado, setAutorizado] = useState(
             >
               Panel Barbería Alexis
             </h1>
+
+            <button
+              onClick={cerrarSesion}
+              style={{
+                marginTop: "16px",
+                background: "#dc2626",
+                color: "white",
+                border: "none",
+                borderRadius: "10px",
+                padding: "10px 15px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                width: "auto",
+              }}
+            >
+              🚪 Cerrar sesión
+            </button>
           </div>
 
           <img
@@ -302,13 +293,7 @@ const [autorizado, setAutorizado] = useState(
                 {m.titulo}
               </p>
 
-              <h2
-                style={{
-                  color: "white",
-                  margin: "8px 0 0",
-                  fontSize: "30px",
-                }}
-              >
+              <h2 style={{ color: "white", margin: "8px 0 0", fontSize: "30px" }}>
                 {m.valor}
               </h2>
             </div>
@@ -345,6 +330,7 @@ const [autorizado, setAutorizado] = useState(
                 padding: "10px 14px",
                 fontWeight: "900",
                 cursor: "pointer",
+                width: "auto",
               }}
             >
               Actualizar
@@ -407,9 +393,7 @@ const [autorizado, setAutorizado] = useState(
                       {cita.estado === "confirmada" ? (
                         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                           <button
-                            onClick={() =>
-                              actualizarEstado(cita.id, "completada")
-                            }
+                            onClick={() => actualizarEstado(cita.id, "completada")}
                             style={{
                               background: "#16a34a",
                               color: "white",
@@ -418,15 +402,14 @@ const [autorizado, setAutorizado] = useState(
                               padding: "9px 10px",
                               fontWeight: "900",
                               cursor: "pointer",
+                              width: "auto",
                             }}
                           >
                             ✅ Completar
                           </button>
 
                           <button
-                            onClick={() =>
-                              actualizarEstado(cita.id, "cancelada")
-                            }
+                            onClick={() => actualizarEstado(cita.id, "cancelada")}
                             style={{
                               background: "#dc2626",
                               color: "white",
@@ -435,6 +418,7 @@ const [autorizado, setAutorizado] = useState(
                               padding: "9px 10px",
                               fontWeight: "900",
                               cursor: "pointer",
+                              width: "auto",
                             }}
                           >
                             🗑 Cancelar
